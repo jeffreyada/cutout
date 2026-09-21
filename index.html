@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cutout — remove backgrounds, free and forever</title>
+<meta name="description" content="Free background removal that runs entirely in your browser. No account, no watermark, no paywall.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <span class="mark">Cutout</span>
+  </header>
+
+  <section class="hero">
+    <h1>Cut the subject.<br>Keep the rest free.</h1>
+    <p class="sub">Background removal with no account, no watermark, and no paywall. It runs entirely in your browser, so the photo never leaves your device.</p>
+  </section>
+
+  <section class="tool">
+    <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload a photo to remove its background">
+
+      <div class="dz-content" id="dzIdle">
+        <svg class="dz-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+          <path d="M12 16V4M12 4L7 9M12 4l5 5"/>
+          <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+        </svg>
+        <p>Drop a photo here, or <span class="link">choose a file</span></p>
+        <p class="hint">JPG, PNG, or WebP</p>
+      </div>
+
+      <div class="dz-content hidden" id="dzWorking">
+        <p id="statusText" aria-live="polite">Loading the model…</p>
+        <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+        <p class="hint" id="firstRunHint">First run downloads the model (around 80MB) — after that it's instant.</p>
+      </div>
+
+      <div class="result hidden" id="dzResult">
+        <div class="checker"><img id="resultImg" alt="Photo with background removed"></div>
+      </div>
+
+    </div>
+
+    <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" hidden>
+
+    <p class="error hidden" id="errorText"></p>
+
+    <div class="actions hidden" id="actions">
+      <button class="btn btn-primary" id="downloadBtn">Download PNG</button>
+      <button class="btn btn-ghost" id="resetBtn">Try another photo</button>
+    </div>
+  </section>
+
+  <section class="how">
+    <div class="step">
+      <span class="n">1</span>
+      <p>Drop in a photo</p>
+    </div>
+    <div class="step">
+      <span class="n">2</span>
+      <p>A model runs locally in your browser to lift out the subject</p>
+    </div>
+    <div class="step">
+      <span class="n">3</span>
+      <p>Download the cutout as a transparent PNG</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>Nothing you upload ever reaches a server — the whole process happens in this tab. Built on the open-source <a href="https://github.com/imgly/background-removal-js" target="_blank" rel="noopener">imgly background-removal</a> model.</p>
+  </footer>
+
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

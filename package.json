@@ -1,0 +1,18 @@
+{
+  "name": "cutout",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Free, in-browser background removal. No account, no watermark, no paywall.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@imgly/background-removal": "^1.6.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}
