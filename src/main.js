@@ -1,12 +1,6 @@
 import { removeBackground } from '@imgly/background-removal';
 import './style.css';
 
-// The wasm/onnx model files are large (40-80MB), so instead of bundling them
-// into the repo we point at the same package version on a CDN. This keeps
-// the git repo small and the files cached across visits to any site using
-// this version. See README for how to self-host instead if you'd rather.
-const MODEL_ASSET_BASE =
-  'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.6.0/dist/';
 
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
@@ -59,7 +53,6 @@ async function processFile(file) {
 
   try {
     const blob = await removeBackground(file, {
-      publicPath: MODEL_ASSET_BASE,
       progress: (key, current, total) => {
         modelWarmed = true;
         if (total > 0) {
