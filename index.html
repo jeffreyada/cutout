@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cutout — remove backgrounds, free and forever</title>
+<title>Cutout &mdash; remove backgrounds, free and forever</title>
 <meta name="description" content="Free background removal that runs entirely in your browser. No account, no watermark, no paywall.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%233d7dff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,21 +24,24 @@
   </section>
 
   <section class="tool">
-    <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload a photo to remove its background">
+    <noscript><p class="error">Cutout needs JavaScript to run. Please enable it and reload the page.</p></noscript>
 
-      <div class="dz-content" id="dzIdle">
-        <svg class="dz-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+    <div id="dropzone" class="dropzone">
+
+      <div class="dz-content dz-idle" id="dzIdle" tabindex="0" role="button" aria-label="Upload a photo to remove its background">
+        <svg class="dz-icon" aria-hidden="true" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
           <path d="M12 16V4M12 4L7 9M12 4l5 5"/>
           <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
         </svg>
         <p>Drop a photo here, or <span class="link">choose a file</span></p>
-        <p class="hint">JPG, PNG, or WebP</p>
+        <p class="hint">JPG, PNG, or WebP, up to 25 MB. Works best on photos with a clear subject.</p>
       </div>
 
       <div class="dz-content hidden" id="dzWorking">
         <p id="statusText" aria-live="polite">Loading the model…</p>
         <div class="bar"><div class="bar-fill" id="barFill"></div></div>
-        <p class="hint" id="firstRunHint">First run downloads the model (around 80MB) — after that it's instant.</p>
+        <p class="hint" id="elapsedText"></p>
+        <p class="hint" id="firstRunHint">First run downloads the model (about 80 MB). Each photo can then take up to a minute on slower devices.</p>
       </div>
 
       <div class="result hidden" id="dzResult">
@@ -48,7 +52,7 @@
 
     <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" hidden>
 
-    <p class="error hidden" id="errorText"></p>
+    <p class="error hidden" id="errorText" role="alert"></p>
 
     <div class="actions hidden" id="actions">
       <button class="btn btn-primary" id="downloadBtn">Download PNG</button>
@@ -72,7 +76,7 @@
   </section>
 
   <footer>
-    <p>Nothing you upload ever reaches a server — the whole process happens in this tab. Built on the open-source <a href="https://github.com/imgly/background-removal-js" target="_blank" rel="noopener">imgly background-removal</a> model.</p>
+    <p>Nothing you upload ever reaches a server &mdash; the whole process happens in this tab. Built on the open-source <a href="https://github.com/imgly/background-removal-js" target="_blank" rel="noopener">imgly background-removal</a> model. <a href="https://github.com/r0cav/cutout" target="_blank" rel="noopener">Source code</a>.</p>
   </footer>
 
 </div>
