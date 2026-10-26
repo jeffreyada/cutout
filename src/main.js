@@ -1,9 +1,10 @@
-import { removeBackground } from '@imgly/background-removal';
+import { removeBackground, preload } from '@imgly/background-removal';
 import './style.css';
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 const MAX_EDGE = 2048;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MODEL = 'isnet_fp16';
 
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
@@ -27,6 +28,8 @@ let currentFilename = 'cutout.png';
 let modelReady = false;
 let dragDepth = 0;
 let timerId = null;
+let preloadStarted = false;
+let configPromise = null;
 
 function showState(next) {
   state = next;
@@ -44,6 +47,10 @@ function showError(message) {
 
 function hideError() {
   errorText.classList.add('hidden');
+}
+
+function setFirstRunHint(visible) {
+  firstRunHint.style.display = visible ? '' : 'none';
 }
 
 function setProgress(pct, label) {
@@ -74,6 +81,37 @@ function stopTimer() {
   }
 }
 
+async function detectConfig() {
+  const forced = new URLSearchParams(location.search).get('device');
+  let device = forced === 'cpu' || forced === 'gpu' ? forced : 'cpu';
+  if (!forced) {
+    try {
+      if (navigator.gpu && (await navigator.gpu.requestAdapter())) device = 'gpu';
+    } catch {
+      device = 'cpu';
+    }
+  }
+  console.info('[cutout] device:', device, '| crossOriginIsolated:', self.crossOriginIsolated);
+  return { device, model: MODEL };
+}
+
+function getConfig() {
+  if (!configPromise) configPromise = detectConfig();
+  return configPromise;
+}
+
+async function warmUp() {
+  if (preloadStarted) return;
+  preloadStarted = true;
+  try {
+    await preload(await getConfig());
+    modelReady = true;
+  } catch (err) {
+    console.warn('[cutout] preload failed', err);
+    preloadStarted = false;
+  }
+}
+
 function validate(file) {
   if (!file) return 'No file was received.';
   if (!ALLOWED_TYPES.includes(file.type)) return 'Please use a JPG, PNG, or WebP photo.';
@@ -85,24 +123,21 @@ function validate(file) {
 async function prepareImage(file) {
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
   const longEdge = Math.max(bitmap.width, bitmap.height);
-  if (longEdge <= MAX_EDGE) {
-    bitmap.close();
-    return { input: file, scaled: false };
-  }
-  const scale = MAX_EDGE / longEdge;
+  const scale = Math.min(1, MAX_EDGE / longEdge);
   const w = Math.round(bitmap.width * scale);
   const h = Math.round(bitmap.height * scale);
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(bitmap, 0, 0, w, h);
   bitmap.close();
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, file.type, 0.95));
   canvas.width = 0;
   canvas.height = 0;
   if (!blob) throw new Error('Could not prepare the image');
-  return { input: blob, scaled: true };
+  return { input: blob, scaled: scale < 1, width: w, height: h };
 }
 
 async function opaqueRatio(blob) {
@@ -163,18 +198,22 @@ async function processFile(file, extraNote) {
   showState('working');
   setIndeterminate('Preparing your photo…');
   elapsedText.textContent = '';
-  firstRunHint.classList.toggle('hidden', modelReady);
+  setFirstRunHint(!modelReady);
 
   try {
+    const t0 = performance.now();
     const prepared = await prepareImage(file);
+    const t1 = performance.now();
     if (prepared.scaled) {
       notes.push('Photos larger than ' + MAX_EDGE + ' px are reduced to that size for speed.');
     }
 
     stage = 'remove';
     setProgress(0, 'Loading the model…');
+    const config = await getConfig();
 
     const blob = await removeBackground(prepared.input, {
+      ...config,
       progress: (key, current, total) => {
         if (key && key.toLowerCase().includes('fetch')) {
           if (total > 0) {
@@ -183,12 +222,27 @@ async function processFile(file, extraNote) {
           }
         } else if (!computing) {
           computing = true;
-          firstRunHint.classList.add('hidden');
+          setFirstRunHint(false);
           setIndeterminate('Removing the background…');
           startTimer();
         }
       },
     });
+    const t2 = performance.now();
+
+    console.info(
+      '[cutout] timings',
+      JSON.stringify({
+        prepareMs: Math.round(t1 - t0),
+        removeBackgroundMs: Math.round(t2 - t1),
+        originalBytes: file.size,
+        sentBytes: prepared.input.size,
+        sentPx: prepared.width + 'x' + prepared.height,
+        device: config.device,
+        model: config.model,
+        isolated: self.crossOriginIsolated,
+      })
+    );
 
     modelReady = true;
     stopTimer();
@@ -228,6 +282,10 @@ function handleFiles(fileList) {
   processFile(files[0], note);
   return true;
 }
+
+['pointerenter', 'focusin', 'click'].forEach((evt) => {
+  dropzone.addEventListener(evt, warmUp);
+});
 
 dzIdle.addEventListener('click', () => {
   if (state === 'idle') fileInput.click();
